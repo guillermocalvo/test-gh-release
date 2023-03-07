@@ -34,7 +34,7 @@ jobs:
       uses: graalvm/setup-graalvm@v1
       with:
         java-version: '17'
-        version: '22.1.0'
+        version: '22.3.1'
         components: 'native-image'
         cache: 'gradle'
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -48,9 +48,20 @@ jobs:
         arguments: build nativeCompile
 
     # ================================
-    # PACKAGE
+    # PACKAGE (WINDOWS)
+    # ================================
+    - name: Package Build on Windows
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: |
+        mkdir -p binary-${{ matrix.os }}/bin
+        mv ./build/native/nativeCompile/* binary-${{ matrix.os }}/bin
+        zip -r binary-${{ matrix.os }}.zip ./binary-${{ matrix.os }}
+
+    # ================================
+    # PACKAGE (NOT WINDOWS)
     # ================================
     - name: Package Build
+      if: ${{ matrix.os != 'windows-latest' }}
       run: |
         mkdir -p binary-${{ matrix.os }}/bin
         mv ./build/native/nativeCompile/* binary-${{ matrix.os }}/bin

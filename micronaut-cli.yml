@@ -1,0 +1,6 @@
+applicationType: cli
+defaultPackage: dev.guillermo
+testFramework: spock
+sourceLanguage: java
+buildTool: gradle
+features: [annotation-api, app-name, gradle, jackson-databind, java, logback, micronaut-build, picocli, picocli-java-application, picocli-spock, readme, shade, spock, yaml]

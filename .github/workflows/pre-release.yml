@@ -1,0 +1,75 @@
+
+name: Pre-Release
+
+on:
+  push:
+    branches:
+    - develop
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+
+    name: Pre-Release ${{ github.ref }}
+    runs-on: ubuntu-latest
+
+    steps:
+
+    # ================================
+    # SHALLOW CLONE
+    # ================================
+    - name: Shallow clone
+      uses: actions/checkout@v3
+
+    # ================================
+    # SET UP JDK
+    # ================================
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-package: jdk
+        java-version: 11
+
+    # ================================
+    # BUILD
+    # ================================
+    - name: Build
+      uses: gradle/gradle-build-action@v2
+      with:
+        arguments: distZip -x check --info --scan
+
+    # ================================
+    # CURRENT VERSION
+    # ================================
+    - name: Get current version
+      id: current
+      run: |
+        echo "version=$(./gradlew -q projectVersion)" >> $GITHUB_OUTPUT;
+        echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT;
+        echo "time=$(date +'%H:%M:%S')" >> $GITHUB_OUTPUT
+
+    # ================================
+    # CREATE RELEASE
+    # ================================
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      env:
+        CURRENT_VERSION: ${{ steps.current.outputs.version }}
+        CURRENT_DATE: ${{ steps.current.outputs.date }}
+        CURRENT_TIME: ${{ steps.current.outputs.time }}
+      with:
+        name: Release Candidate ${{ env.CURRENT_VERSION }}
+        target_commitish: ${{ github.sha }}
+        tag_name: v${{ env.CURRENT_VERSION }}-rc-${{ github.sha }}
+        body: |
+          This is a snapshot release of the `${{ github.ref_name }}` branch, taken on ${{ env.CURRENT_DATE }} at ${{ env.CURRENT_TIME }}.
+          - Commit SHA: ${{ github.sha }}
+        draft: false
+        prerelease: true
+        generate_release_notes: false
+        files: |
+          README.md
+          build/distributions/*.zip

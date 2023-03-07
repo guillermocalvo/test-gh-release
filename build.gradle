@@ -47,3 +47,13 @@ if (hasProperty('buildScan')) {
         termsOfServiceAgree = 'yes'
     }
 }
+
+/**
+ * Print project version
+ * - Usage: `./gradlew -q projectVersion`
+ */
+task projectVersion {
+    doLast {
+        printf project.version
+    }
+}

@@ -12,9 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [
-          windows-latest,
-          macos-latest,
-          ubuntu-latest
+          windows-latest
         ]
     permissions:
       contents: 'read'
@@ -55,7 +53,7 @@ jobs:
       run: |
         mkdir -p binary-${{ matrix.os }}/bin
         mv ./build/native/nativeCompile/* binary-${{ matrix.os }}/bin
-        zip -r binary-${{ matrix.os }}.zip ./binary-${{ matrix.os }}
+        Compress-Archive binary-${{ matrix.os }} binary-${{ matrix.os }}.zip
 
     # ================================
     # PACKAGE (NOT WINDOWS)

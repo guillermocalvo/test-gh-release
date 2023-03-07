@@ -1,0 +1,62 @@
+
+name: Release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+
+    name: Release ${{ github.ref }}
+    runs-on: ubuntu-latest
+
+    steps:
+
+    # ================================
+    # SHALLOW CLONE
+    # ================================
+    - name: Shallow clone
+      uses: actions/checkout@v3
+
+    # ================================
+    # SET UP JDK
+    # ================================
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-package: jdk
+        java-version: 11
+
+    # ================================
+    # BUILD
+    # ================================
+    - name: Build
+      uses: gradle/gradle-build-action@v2
+      with:
+        arguments: distZip -x check --info --scan
+
+    # ================================
+    # GENERATE CHANGELOG
+    # ================================
+    - name: Generate Changelog
+      run: echo "This is the changelog" > CHANGELOG.txt
+
+    # ================================
+    # CREATE RELEASE
+    # ================================
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: true
+        prerelease: false
+        generate_release_notes: true
+        body_path: CHANGELOG.txt
+        append_body: true
+        files: |
+          CHANGELOG.txt
+          README.md

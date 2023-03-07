@@ -42,12 +42,12 @@ jobs:
         arguments: distZip -x check --info --scan
 
     # ================================
-    # TIMESTAMP
+    # CURRENT VERSION
     # ================================
-    - name: Get current timestamp
-      id: timestamp
+    - name: Get current version
+      id: current
       run: |
-        echo "timestamp=$(date +'%Y%m%d.%H%M%S.%N.%Z')" >> $GITHUB_OUTPUT;
+        echo "version=$(./gradlew -q projectVersion)" >> $GITHUB_OUTPUT;
         echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT;
         echo "time=$(date +'%H:%M:%S')" >> $GITHUB_OUTPUT
 
@@ -57,13 +57,13 @@ jobs:
     - name: Create release
       uses: softprops/action-gh-release@v1
       env:
-        CURRENT_TIMESTAMP: ${{ steps.timestamp.outputs.timestamp }}
-        CURRENT_DATE: ${{ steps.timestamp.outputs.date }}
-        CURRENT_TIME: ${{ steps.timestamp.outputs.time }}
+        CURRENT_VERSION: ${{ steps.current.outputs.version }}
+        CURRENT_DATE: ${{ steps.current.outputs.date }}
+        CURRENT_TIME: ${{ steps.current.outputs.time }}
       with:
-        name: "Pre-Release: ${{ github.ref_name }} branch"
+        name: Release Candidate ${{ env.CURRENT_VERSION }}
         target_commitish: ${{ github.sha }}
-        tag_name: snapshot/${{ github.ref_name }}+${{ env.CURRENT_TIMESTAMP }}
+        tag_name: v${{ env.CURRENT_VERSION }}-rc-${{ github.sha }}
         body: |
           This is a snapshot release of the `${{ github.ref_name }}` branch, taken on ${{ env.CURRENT_DATE }} at ${{ env.CURRENT_TIME }}.
           - Commit SHA: ${{ github.sha }}

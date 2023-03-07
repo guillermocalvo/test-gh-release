@@ -1,0 +1,66 @@
+name: Native Image
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+    name: Native Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [
+          windows-latest,
+          macos-latest,
+          ubuntu-latest
+        ]
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+
+    # ================================
+    # SHALLOW CLONE
+    # ================================
+    - name: Shallow clone
+      uses: actions/checkout@v3
+
+    # ================================
+    # SETUP GRAALVM
+    # ================================
+    - name: Setup GraalVM
+      uses: graalvm/setup-graalvm@v1
+      with:
+        java-version: '17'
+        version: '22.1.0'
+        components: 'native-image'
+        cache: 'gradle'
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    # ================================
+    # BUILD
+    # ================================
+    - name: Build
+      uses: gradle/gradle-build-action@v2
+      with:
+        arguments: build nativeCompile
+
+    # ================================
+    # PACKAGE
+    # ================================
+    - name: Package Build
+      run: |
+        mkdir -p binary-${{ matrix.os }}/bin
+        mv ./build/native/nativeCompile/* binary-${{ matrix.os }}/bin
+        zip -r binary-${{ matrix.os }}.zip ./binary-${{ matrix.os }}
+
+    # ================================
+    # UPLOAD BINARY
+    # ================================
+    - name: Upload Build
+      uses: actions/upload-artifact@v2
+      with:
+        name: binary-${{ matrix.os }}
+        path: binary-${{ matrix.os }}.zip

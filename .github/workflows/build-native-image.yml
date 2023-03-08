@@ -1,12 +1,17 @@
+
 name: Native Image
 
 on:
   push:
     branches:
-      - develop
+    - develop
+
+permissions:
+  contents: write
 
 jobs:
   build:
+
     name: Native Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -15,9 +20,7 @@ jobs:
         - windows-latest
         - macos-latest
         - ubuntu-latest
-    permissions:
-      contents: 'read'
-      id-token: 'write'
+
     steps:
 
     # ================================
@@ -25,35 +28,6 @@ jobs:
     # ================================
     - name: Shallow clone
       uses: actions/checkout@v3
-
-    # ================================
-    # SETUP GRAALVM
-    # ================================
-    - name: Setup GraalVM
-      uses: graalvm/setup-graalvm@v1
-      with:
-        java-version: '17'
-        version: '22.3.1'
-        components: 'native-image'
-        cache: 'gradle'
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-
-    # ================================
-    # BUILD
-    # ================================
-    - name: Build
-      uses: gradle/gradle-build-action@v2
-      with:
-        arguments: build nativeCompile
-
-    # ================================
-    # UPLOAD BINARY
-    # ================================
-    - name: Upload Build
-      uses: actions/upload-artifact@v3
-      with:
-        name: binary-${{ matrix.os }}
-        path: build/native/nativeCompile/*
 
     # ================================
     # CURRENT VERSION
@@ -65,13 +39,58 @@ jobs:
         echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT;
         echo "time=$(date +'%H:%M:%S')" >> $GITHUB_OUTPUT;
 
+#    # ================================
+#    # SETUP GRAALVM
+#    # ================================
+#    - name: Setup GraalVM
+#      uses: graalvm/setup-graalvm@v1
+#      with:
+#        java-version: '17'
+#        version: '22.3.1'
+#        components: 'native-image'
+#        cache: 'gradle'
+#        github-token: ${{ secrets.GITHUB_TOKEN }}
+#
+#    # ================================
+#    # BUILD
+#    # ================================
+#    - name: Build
+#      uses: gradle/gradle-build-action@v2
+#      with:
+#        arguments: build nativeCompile
+#
+#    # ================================
+#    # UPLOAD BINARY
+#    # ================================
+#    - name: Upload Build
+#      uses: actions/upload-artifact@v3
+#      with:
+#        name: binary-${{ matrix.os }}
+#        path: build/native/nativeCompile/*
+#
+#    # ================================
+#    # PACKAGE (WINDOWS)
+#    # ================================
+#    - name: Package Build on Windows
+#      if: ${{ matrix.os == 'windows-latest' }}
+#      run: |
+#        Compress-Archive build/native/nativeCompile/* binary-${{ matrix.os }}.zip
+#
+#    # ================================
+#    # PACKAGE (NOT WINDOWS)
+#    # ================================
+#    - name: Package Build
+#      if: ${{ matrix.os != 'windows-latest' }}
+#      run: |
+#        zip -r binary-${{ matrix.os }}.zip build/native/nativeCompile/*
+
     # ================================
     # PACKAGE (WINDOWS)
     # ================================
     - name: Package Build on Windows
       if: ${{ matrix.os == 'windows-latest' }}
       run: |
-        Compress-Archive build/native/nativeCompile/* binary-${{ matrix.os }}.zip
+        Compress-Archive README.md binary-${{ matrix.os }}.zip
 
     # ================================
     # PACKAGE (NOT WINDOWS)
@@ -79,7 +98,7 @@ jobs:
     - name: Package Build
       if: ${{ matrix.os != 'windows-latest' }}
       run: |
-        zip -r binary-${{ matrix.os }}.zip build/native/nativeCompile/*
+        zip -r binary-${{ matrix.os }}.zip README.md
 
     # ================================
     # CREATE RELEASE

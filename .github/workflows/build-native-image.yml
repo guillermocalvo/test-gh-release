@@ -30,11 +30,25 @@ jobs:
       uses: actions/checkout@v3
 
     # ================================
+    # CURRENT VERSION (WINDOWS)
+    # ================================
+    - name: Get current version
+      if: ${{ matrix.os == 'windows-latest' }}
+      id: current
+      run: |
+        echo ${{ matrix.os }} >> README.md
+        echo "version=$(./gradlew.bat -q projectVersion)" >> $GITHUB_OUTPUT
+        echo "date=$(Get-Date -Format yyyy-MM-dd)" >> $GITHUB_OUTPUT
+        echo "time=$(Get-Date -Format HH:mm:ss)" >> $GITHUB_OUTPUT
+
+    # ================================
     # CURRENT VERSION
     # ================================
     - name: Get current version
+      if: ${{ matrix.os != 'windows-latest' }}
       id: current
       run: |
+        echo ${{ matrix.os }} >> README.md;
         echo "version=$(./gradlew -q projectVersion)" >> $GITHUB_OUTPUT;
         echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT;
         echo "time=$(date +'%H:%M:%S')" >> $GITHUB_OUTPUT;

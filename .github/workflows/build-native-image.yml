@@ -11,9 +11,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [
-          windows-latest
-        ]
+        os:
+        - windows-latest
+        - macos-latest
+        - ubuntu-latest
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -46,30 +47,10 @@ jobs:
         arguments: build nativeCompile
 
     # ================================
-    # PACKAGE (WINDOWS)
-    # ================================
-    - name: Package Build on Windows
-      if: ${{ matrix.os == 'windows-latest' }}
-      run: |
-        mkdir -p binary-${{ matrix.os }}/bin
-        mv ./build/native/nativeCompile/* binary-${{ matrix.os }}/bin
-        Compress-Archive binary-${{ matrix.os }} binary-${{ matrix.os }}.zip
-
-    # ================================
-    # PACKAGE (NOT WINDOWS)
-    # ================================
-    - name: Package Build
-      if: ${{ matrix.os != 'windows-latest' }}
-      run: |
-        mkdir -p binary-${{ matrix.os }}/bin
-        mv ./build/native/nativeCompile/* binary-${{ matrix.os }}/bin
-        zip -r binary-${{ matrix.os }}.zip ./binary-${{ matrix.os }}
-
-    # ================================
     # UPLOAD BINARY
     # ================================
     - name: Upload Build
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: binary-${{ matrix.os }}
-        path: binary-${{ matrix.os }}.zip
+        path: build/native/nativeCompile/*

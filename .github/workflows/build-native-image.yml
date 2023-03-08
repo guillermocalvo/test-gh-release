@@ -54,3 +54,52 @@ jobs:
       with:
         name: binary-${{ matrix.os }}
         path: build/native/nativeCompile/*
+
+    # ================================
+    # CURRENT VERSION
+    # ================================
+    - name: Get current version
+      id: current
+      run: |
+        echo "version=$(./gradlew -q projectVersion)" >> $GITHUB_OUTPUT;
+        echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT;
+        echo "time=$(date +'%H:%M:%S')" >> $GITHUB_OUTPUT;
+
+    # ================================
+    # PACKAGE (WINDOWS)
+    # ================================
+    - name: Package Build on Windows
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: |
+        Compress-Archive build/native/nativeCompile/* binary-${{ matrix.os }}.zip
+
+    # ================================
+    # PACKAGE (NOT WINDOWS)
+    # ================================
+    - name: Package Build
+      if: ${{ matrix.os != 'windows-latest' }}
+      run: |
+        zip -r binary-${{ matrix.os }}.zip build/native/nativeCompile/*
+
+    # ================================
+    # CREATE RELEASE
+    # ================================
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      env:
+        CURRENT_VERSION: ${{ steps.current.outputs.version }}
+        CURRENT_DATE: ${{ steps.current.outputs.date }}
+        CURRENT_TIME: ${{ steps.current.outputs.time }}
+      with:
+        name: Release Candidate ${{ env.CURRENT_VERSION }}
+        target_commitish: ${{ github.sha }}
+        tag_name: v${{ env.CURRENT_VERSION }}-rc-${{ github.sha }}
+        body: |
+          This is a snapshot release of the `${{ github.ref_name }}` branch, taken on ${{ env.CURRENT_DATE }} at ${{ env.CURRENT_TIME }}.
+          - Commit SHA: ${{ github.sha }}
+        draft: false
+        prerelease: true
+        generate_release_notes: false
+        files: |
+          README.md
+          binary-${{ matrix.os }}.zip

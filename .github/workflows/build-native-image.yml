@@ -38,26 +38,26 @@ jobs:
       with:
         arguments: projectVersion
 
-#    # ================================
-#    # SETUP GRAALVM
-#    # ================================
-#    - name: Setup GraalVM
-#      uses: graalvm/setup-graalvm@v1
-#      with:
-#        java-version: '17'
-#        version: '22.3.1'
-#        components: 'native-image'
-#        cache: 'gradle'
-#        github-token: ${{ secrets.GITHUB_TOKEN }}
-#
-#    # ================================
-#    # BUILD
-#    # ================================
-#    - name: Build
-#      uses: gradle/gradle-build-action@v2
-#      with:
-#        arguments: build nativeCompile
-#
+    # ================================
+    # SETUP GRAALVM
+    # ================================
+    - name: Setup GraalVM
+      uses: graalvm/setup-graalvm@v1
+      with:
+        java-version: '17'
+        version: '22.3.1'
+        components: 'native-image'
+        cache: 'gradle'
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    # ================================
+    # BUILD
+    # ================================
+    - name: Build
+      uses: gradle/gradle-build-action@v2
+      with:
+        arguments: build nativeCompile --info
+
 #    # ================================
 #    # UPLOAD BINARY
 #    # ================================
@@ -66,38 +66,16 @@ jobs:
 #      with:
 #        name: binary-${{ matrix.os }}
 #        path: build/native/nativeCompile/*
-#
-#    # ================================
-#    # PACKAGE (WINDOWS)
-#    # ================================
-#    - name: Package Build on Windows
-#      if: ${{ matrix.os == 'windows-latest' }}
-#      run: |
-#        Compress-Archive build/native/nativeCompile/* binary-${{ matrix.os }}.zip
-#
-#    # ================================
-#    # PACKAGE (NOT WINDOWS)
-#    # ================================
-#    - name: Package Build
-#      if: ${{ matrix.os != 'windows-latest' }}
-#      run: |
-#        zip -r binary-${{ matrix.os }}.zip build/native/nativeCompile/*
 
     # ================================
-    # PACKAGE (WINDOWS)
+    # PACKAGE
     # ================================
-    - name: Package Build on Windows
-      if: ${{ matrix.os == 'windows-latest' }}
-      run: |
-        Compress-Archive README.md binary-${{ matrix.os }}.zip
-
-    # ================================
-    # PACKAGE (NOT WINDOWS)
-    # ================================
-    - name: Package Build
-      if: ${{ matrix.os != 'windows-latest' }}
-      run: |
-        zip -r binary-${{ matrix.os }}.zip README.md
+    - name: Package
+      uses: gradle/gradle-build-action@v2
+      env:
+        NATIVE_VARIANT: ${{ matrix.os }}
+      with:
+        arguments: nativeDist --info
 
     # ================================
     # CREATE RELEASE
@@ -110,12 +88,9 @@ jobs:
         name: Release Candidate ${{ env.PROJECT_VERSION }}
         target_commitish: ${{ github.sha }}
         tag_name: v${{ env.PROJECT_VERSION }}-rc-${{ github.sha }}
-        body: |
-          This is a snapshot release of the `${{ github.ref_name }}` branch.
-          - Commit SHA: ${{ github.sha }}
         draft: false
         prerelease: true
-        generate_release_notes: false
+        generate_release_notes: true
         files: |
           README.md
-          binary-${{ matrix.os }}.zip
+          build/native/dist/binary-${{ matrix.os }}.zip

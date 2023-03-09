@@ -48,12 +48,14 @@ if (hasProperty('buildScan')) {
     }
 }
 
-/**
- * Print project version
- * - Usage: `./gradlew -q projectVersion`
- */
 task projectVersion {
     doLast {
         new File(System.env.GITHUB_OUTPUT).append("version=${project.version}\n")
     }
+}
+
+task nativeDist(type: Zip) {
+    from 'build/native/nativeCompile/*'
+    destinationDirectory = layout.buildDirectory.dir('native/dist')
+    archiveFileName = "binary-${System.env.NATIVE_VARIANT}.zip"
 }

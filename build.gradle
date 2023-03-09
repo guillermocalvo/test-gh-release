@@ -54,6 +54,6 @@ if (hasProperty('buildScan')) {
  */
 task projectVersion {
     doLast {
-        printf project.version
+        new File(System.env.GITHUB_OUTPUT).append("version=${project.version}\n")
     }
 }

@@ -41,6 +41,14 @@ micronaut {
     }
 }
 
+graalvmNative {
+    binaries {
+        main {
+            imageName = 'application'
+        }
+    }
+}
+
 if (hasProperty('buildScan')) {
     buildScan {
         termsOfServiceUrl = 'https://gradle.com/terms-of-service'
@@ -55,7 +63,8 @@ task projectVersion {
 }
 
 task nativeDist(type: Zip) {
-    from 'build/native/nativeCompile/*'
+    from 'build/native/nativeCompile'
+	include 'application*'
     destinationDirectory = layout.buildDirectory.dir('native/dist')
     archiveFileName = "binary-${System.env.NATIVE_VARIANT}.zip"
 }

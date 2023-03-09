@@ -34,24 +34,20 @@ jobs:
     # ================================
     - name: Get current version
       if: ${{ matrix.os == 'windows-latest' }}
-      id: current
+      id: current_windows
       run: |
         echo ${{ matrix.os }} >> README.md
         echo "version=$(./gradlew.bat -q projectVersion)" >> $GITHUB_OUTPUT
-        echo "date=$(Get-Date -Format yyyy-MM-dd)" >> $GITHUB_OUTPUT
-        echo "time=$(Get-Date -Format HH:mm:ss)" >> $GITHUB_OUTPUT
 
     # ================================
-    # CURRENT VERSION
+    # CURRENT VERSION (LINUX)
     # ================================
     - name: Get current version
       if: ${{ matrix.os != 'windows-latest' }}
-      id: current
+      id: current_linux
       run: |
         echo ${{ matrix.os }} >> README.md;
-        echo "version=$(./gradlew -q projectVersion)" >> $GITHUB_OUTPUT;
-        echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT;
-        echo "time=$(date +'%H:%M:%S')" >> $GITHUB_OUTPUT;
+        echo "version=$(./gradlew -q projectVersion)" >> $GITHUB_OUTPUT
 
 #    # ================================
 #    # SETUP GRAALVM
@@ -120,15 +116,13 @@ jobs:
     - name: Create release
       uses: softprops/action-gh-release@v1
       env:
-        CURRENT_VERSION: ${{ steps.current.outputs.version }}
-        CURRENT_DATE: ${{ steps.current.outputs.date }}
-        CURRENT_TIME: ${{ steps.current.outputs.time }}
+        CURRENT_VERSION: ${{ steps.current_linux.outputs.version }}${{ steps.current_windows.outputs.version }}
       with:
         name: Release Candidate ${{ env.CURRENT_VERSION }}
         target_commitish: ${{ github.sha }}
         tag_name: v${{ env.CURRENT_VERSION }}-rc-${{ github.sha }}
         body: |
-          This is a snapshot release of the `${{ github.ref_name }}` branch, taken on ${{ env.CURRENT_DATE }} at ${{ env.CURRENT_TIME }}.
+          This is a snapshot release of the `${{ github.ref_name }}` branch.
           - Commit SHA: ${{ github.sha }}
         draft: false
         prerelease: true
